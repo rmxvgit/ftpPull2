@@ -86,6 +86,8 @@ def pull_files(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int
         os.system(f"./blast-dbf {fileName} {fileName[:-4]}.dbf" )
         print("Conversão para csv...")
         dbf_to_csv(fileName[:-4] + ".dbf")
+        print("Processando dados do csv por cnes...")
+        os.system(f"python3 processar_dados.py {fileName[:-4]}.csv")
 
 def to_time(data: str) -> dict[str, int]:
     month_year = [int(x) for x in data.split('-')]
