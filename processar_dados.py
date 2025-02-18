@@ -8,12 +8,12 @@ def processar_dados_csv(csv_file_path: str):
     df_main = pd.read_csv(csv_file_path, encoding='latin1', low_memory=False)
     df_proc = pd.read_csv("dadosprocedimentos.csv")
     df_tunep = pd.read_csv("tabela_tunep_mais_origem.csv", encoding='latin1')
-    
+
 
     # Filtrando por CNES
     df_cnes = df_main[df_main['PA_CODUNI'] == 2248328]  # Puxar CNES de algum local
     df_filt = df_cnes[['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID', 'PA_QTDAPR', 'PA_VALPRO']]
-    
+
     print("DF cnes")
     print(df_cnes)
 
@@ -52,7 +52,7 @@ def processar_dados_csv(csv_file_path: str):
     print(f"Resultado salvo em: {output_csv_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print("Uso: python processar_dados.py <caminho_do_csv>")
     else:
         csv_file_path = sys.argv[1]

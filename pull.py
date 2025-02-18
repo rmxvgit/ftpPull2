@@ -15,7 +15,7 @@ search_prefix = {
 }
 
 # padrão de chamada do programa:
-# python pull.py <SIA/SIH> <estado> <data-inicio> <data-fim>
+# python pull.py <SIA/SIH> <estado> <data-inicio> <data-fim> <CNES>
 
 def main():
     args = sys.argv[1:]
@@ -26,14 +26,14 @@ def main():
     print(args)
 
     if args[0] == 'SIA':
-        pull_files(args[1], data_inicio, data_fim, 'SIA')
+        pull_files(args[1], data_inicio, data_fim, 'SIA', args[4])
     elif args[0] == 'SIH':
-        pull_files(args[1], data_inicio, data_fim, 'SIH')
+        pull_files(args[1], data_inicio, data_fim, 'SIH', args[4])
     else:
         print("Argumento inválido:", args[0])
 
 def validate_args(args: list[str]) -> bool:
-    if len(args) != 4:
+    if len(args) != 5:
         print("Número de argumentos inválido")
         return False
     if args[0] not in ['SIA', 'SIH']:
@@ -74,7 +74,7 @@ def find_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: d
     ftp_client.quit()
     return files
 
-def pull_files(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sia_sih: str):
+def pull_files(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sia_sih: str, cnes: str):
     files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
     print("Arquivos a serem baixados:")
     print(files_of_interest)
@@ -87,7 +87,7 @@ def pull_files(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int
         print("Conversão para csv...")
         dbf_to_csv(fileName[:-4] + ".dbf")
         print("Processando dados do csv por cnes...")
-        os.system(f"python3 processar_dados.py {fileName[:-4]}.csv")
+        os.system(f"python3 processar_dados.py {fileName[:-4]}.csv {cnes}")
 
 def to_time(data: str) -> dict[str, int]:
     month_year = [int(x) for x in data.split('-')]
