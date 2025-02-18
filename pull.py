@@ -4,6 +4,16 @@ from dbfread import DBF
 import sys
 import os
 
+searchDirs = {
+    'SIA': ["/dissemin/publicos/SIASUS/199407_200712/Dados", "/dissemin/publicos/SIASUS/200801_/Dados"],
+    'SIH': ["/dissemin/publicos/SIHSUS/199201_200712/Dados", "/dissemin/publicos/SIHSUS/200801_/Dados"]
+}
+
+search_prefix = {
+    'SIA': 'PA',
+    'SIH': 'RD'
+}
+
 # padrão de chamada do programa:
 # python pull.py <SIA/SIH> <estado> <data-inicio> <data-fim>
 
@@ -16,9 +26,9 @@ def main():
     print(args)
 
     if args[0] == 'SIA':
-        sia_pull(args[1], data_inicio, data_fim)
+        pull_files(args[1], data_inicio, data_fim, 'SIA')
     elif args[0] == 'SIH':
-        sih_pull(args[1], data_inicio, data_fim)
+        pull_files(args[1], data_inicio, data_fim, 'SIH')
     else:
         print("Argumento inválido:", args[0])
 
@@ -39,25 +49,12 @@ def validate_args(args: list[str]) -> bool:
         return False
     return True
 
-def sia_pull(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int]):
-    files_of_interest = find_sia_files_of_interest(estado, data_inicio, data_fim)
-    print("Arquivos a serem baixados:")
-    print(files_of_interest)
-
-    for file in files_of_interest:
-        dowload_from_ftp("ftp.datasus.gov.br", file, os.curdir)
-        fileName = os.path.split(file)[1]
-        print("Conversão para dbf...")
-        os.system(f"./blast-dbf {fileName} {fileName[:-4]}.dbf" )
-        print("Conversão para csv...")
-        dbf_to_csv(fileName[:-4] + ".dbf")
-
 def is_date_less(date1: dict[str, int], date2: dict[str, int]) -> bool:
     return date1['year'] < date2['year'] or (date1['year'] == date2['year'] and date1['month'] < date2['month'])
 
-def find_sia_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int]) -> list[str]:
+def find_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sih_sia: str):
     files = []
-    search_dirs = ["/dissemin/publicos/SIASUS/199407_200712/Dados", "/dissemin/publicos/SIASUS/200801_/Dados"]
+    search_dirs = searchDirs[sih_sia]
     ftp_client = ftp.FTP("ftp.datasus.gov.br")
     ftp_client.login()
     for dir in search_dirs:
@@ -68,7 +65,7 @@ def find_sia_files_of_interest(estado: str, data_inicio: dict[str, int], data_fi
                 try: date = to_time(dateString)
                 except: return
 
-                if file[0:2] != 'PA' or estado != file[2:4] or is_date_less(date, data_inicio) or is_date_less(data_fim, date):
+                if file[0:2] != search_prefix[sih_sia] or estado != file[2:4] or is_date_less(date, data_inicio) or is_date_less(data_fim, date):
                     return
                 files.append(dir + "/" + file)
 
@@ -77,8 +74,8 @@ def find_sia_files_of_interest(estado: str, data_inicio: dict[str, int], data_fi
     ftp_client.quit()
     return files
 
-def sih_pull(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int]):
-    files_of_interest = find_sih_files_of_interest(estado, data_inicio, data_fim)
+def pull_files(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sia_sih: str):
+    files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
     print("Arquivos a serem baixados:")
     print(files_of_interest)
 
@@ -89,30 +86,6 @@ def sih_pull(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int])
         os.system(f"./blast-dbf {fileName} {fileName[:-4]}.dbf" )
         print("Conversão para csv...")
         dbf_to_csv(fileName[:-4] + ".dbf")
-
-def find_sih_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int]) -> list[str]:
-    files = []
-    search_dirs = ["/dissemin/publicos/SIHSUS/199201_200712/Dados", "/dissemin/publicos/SIHSUS/200801_/Dados"]
-
-    ftp_client = ftp.FTP("ftp.datasus.gov.br")
-    ftp_client.login()
-
-    for dir in search_dirs:
-        def append_to_file(file: str): # sim, isso é uma declaração de função dentro de um for loop. E, sim, faz sentido.
-                file = file.split(' ')[-1]
-                dateString =  file[6:8] + "-" + file[4:6]
-                try: date = to_time(dateString)
-                except: return
-
-                if file[0:2] != "RD" or estado != file[2:4] or is_date_less(date, data_inicio) or is_date_less(data_fim, date):
-                    return
-                files.append(dir + "/" + file)
-
-        ftp_client.cwd(dir)
-        ftp_client.retrlines("LIST", append_to_file)
-
-    ftp_client.quit()
-    return files
 
 def to_time(data: str) -> dict[str, int]:
     month_year = [int(x) for x in data.split('-')]
