@@ -32,9 +32,9 @@ def main():
     print(args)
 
     if args[0] == 'SIA':
-        pull_files(args[1], data_inicio, data_fim, 'SIA', args[4])
+        get_and_process_data(args[1], data_inicio, data_fim, 'SIA', args[4])
     elif args[0] == 'SIH':
-        pull_files(args[1], data_inicio, data_fim, 'SIH', args[4])
+        get_and_process_data(args[1], data_inicio, data_fim, 'SIH', args[4])
     else:
         print("Argumento inválido:", args[0])
 
@@ -80,20 +80,28 @@ def find_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: d
     ftp_client.quit()
     return files
 
-def pull_files(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sia_sih: str, cnes: str):
+def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sia_sih: str, cnes: str):
     files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
     print("Arquivos a serem baixados:")
     print(files_of_interest)
 
+    try:
+        os.makedirs("downloads")
+        os.makedirs("dbfs")
+        os.makedirs("csvs")
+        os.makedirs("finalcsvs")
+    except:
+        pass
+
     for file in files_of_interest:
-        dowload_from_ftp("ftp.datasus.gov.br", file, os.curdir)
+        dowload_from_ftp("ftp.datasus.gov.br", file, f"{os.curdir}/downloads/")
         fileName = os.path.split(file)[1]
         print("Conversão para dbf...")
-        os.system(f"./blast-dbf {fileName} {fileName[:-4]}.dbf" )
+        os.system(f"./blast-dbf ./downloads/{fileName} ./dbfs/{fileName[:-4]}.dbf" )
         print("Conversão para csv...")
-        dbf_to_csv(fileName[:-4] + ".dbf")
+        dbf_to_csv(f"./dbfs/{fileName[:-4]}.dbf", f"./csvs/{fileName[:-4]}.csv")
         print("Processando dados do csv por cnes...")
-        os.system(f"python3 processar_dados.py {fileName[:-4]}.csv {cnes}")
+        os.system(f"python3 processar_dados.py ./csvs/{fileName[:-4]}.csv {cnes}")
 
 def to_time(data: str) -> dict[str, int]:
     month_year = [int(x) for x in data.split('-')]
@@ -123,10 +131,9 @@ def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
         print("Erro ao fazer download", remote_path)
         return
 
-def dbf_to_csv(dbf_table_pth: str):#Input a dbf, output a csv, same name, same path, except extension
-    csv_fn = dbf_table_pth[:-4]+ ".csv" #Set the csv file name
+def dbf_to_csv(dbf_table_pth: str, csv_output_path: str):#Input a dbf, output a csv, same name, same path, except extension
     table = DBF(dbf_table_pth)# table variable is a DBF object
-    with open(csv_fn, 'w', newline = '') as f:# create a csv file, fill it with dbf content
+    with open(csv_output_path, 'w', newline = '') as f:# create a csv file, fill it with dbf content
         writer = csv.writer(f)
         writer.writerow(table.field_names)# write the column name
         for record in table:# write the rows
@@ -149,5 +156,4 @@ def create_pdf_from_csv(source_file_path: str, output_file_path: str):
 
     pdf.output(output_file_path)
 
-create_pdf_from_csv("tabela_teste.csv", "tabela_teste.pdf")
-#main()
+main()
