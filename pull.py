@@ -10,6 +10,8 @@ import os
 
 from pandas.io.parsers.readers import read_csv
 
+#TODO: criar forma de conferir se os arquivos foram baixados na íntegra
+
 searchDirs = {
     'SIA': ["/dissemin/publicos/SIASUS/199407_200712/Dados", "/dissemin/publicos/SIASUS/200801_/Dados"],
     'SIH': ["/dissemin/publicos/SIHSUS/199201_200712/Dados", "/dissemin/publicos/SIHSUS/200801_/Dados"]
