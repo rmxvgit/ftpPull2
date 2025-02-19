@@ -1,8 +1,14 @@
 import ftplib as ftp
+from typing import Text
+from fpdf import FPDF
 import csv
 from dbfread import DBF
+from fpdf.text_region import XPos, YPos
+import pandas as pd
 import sys
 import os
+
+from pandas.io.parsers.readers import read_csv
 
 searchDirs = {
     'SIA': ["/dissemin/publicos/SIASUS/199407_200712/Dados", "/dissemin/publicos/SIASUS/200801_/Dados"],
@@ -117,7 +123,7 @@ def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
         print("Erro ao fazer download", remote_path)
         return
 
-def dbf_to_csv(dbf_table_pth):#Input a dbf, output a csv, same name, same path, except extension
+def dbf_to_csv(dbf_table_pth: str):#Input a dbf, output a csv, same name, same path, except extension
     csv_fn = dbf_table_pth[:-4]+ ".csv" #Set the csv file name
     table = DBF(dbf_table_pth)# table variable is a DBF object
     with open(csv_fn, 'w', newline = '') as f:# create a csv file, fill it with dbf content
@@ -126,4 +132,22 @@ def dbf_to_csv(dbf_table_pth):#Input a dbf, output a csv, same name, same path, 
         for record in table:# write the rows
             writer.writerow(list(record.values()))
 
-main()
+def create_pdf_from_csv(source_file_path: str, output_file_path: str):
+    csv = pd.read_csv(source_file_path)
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font('helvetica', size=12)
+    pdf.cell(200, 10, text="Laudo Do AvogaSUS", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
+    pdf.set_font('helvetica', size=8)
+    for collumn in list(csv.columns):
+        pdf.cell(18, 10, text=str(collumn), border=1)
+    pdf.ln()
+    for index, row in csv.iterrows():
+        for item in row:
+            pdf.cell(18, 10, text=str(item), border=1)
+        pdf.ln()
+
+    pdf.output(output_file_path)
+
+create_pdf_from_csv("tabela_teste.csv", "tabela_teste.pdf")
+#main()
