@@ -94,14 +94,25 @@ def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dic
         pass
 
     for file in files_of_interest:
-        dowload_from_ftp("ftp.datasus.gov.br", file, f"{os.curdir}/downloads/")
         fileName = os.path.split(file)[1]
-        print("Conversão para dbf...")
-        os.system(f"./blast-dbf ./downloads/{fileName} ./dbfs/{fileName[:-4]}.dbf" )
+        if not file_was_already_dowloaded(fileName):
+            print(f"Dowload de {file}...")
+            dowload_from_ftp("ftp.datasus.gov.br", file, f"{os.curdir}/downloads/")
+
+        if not file_was_already_converted_to_dbf(f"{fileName[:-4]}.dbf"):
+            print("Conversão para dbf...")
+            os.system(f"./blast-dbf ./downloads/{fileName} ./dbfs/{fileName[:-4]}.dbf" )
+
         print("Conversão para csv...")
         dbf_to_csv(f"./dbfs/{fileName[:-4]}.dbf", f"./csvs/{fileName[:-4]}.csv")
         print("Processando dados do csv por cnes...")
         os.system(f"python3 processar_dados.py ./csvs/{fileName[:-4]}.csv {cnes}")
+
+def file_was_already_dowloaded(file_name: str) -> bool:
+    return os.path.exists(f"./downloads/{file_name}")
+
+def file_was_already_converted_to_dbf(file_name: str) -> bool:
+    return os.path.exists(f"./dbfs/{file_name}")
 
 def to_time(data: str) -> dict[str, int]:
     month_year = [int(x) for x in data.split('-')]
