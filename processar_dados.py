@@ -21,6 +21,8 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, cnes: int):
     print(df_cnes)
 
     # Agrupando e somando por quantidade
+    df_filt = df_filt[df_filt['PA_QTDAPR'] > 0]
+    df_filt.loc[df_filt['PA_QTDAPR'] > 1, 'PA_VALPRO'] /= df_filt['PA_QTDAPR']
     df_sum = df_filt.groupby(['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID', 'PA_VALPRO'], as_index=False).agg({'PA_QTDAPR': 'sum'})
     df_sum = df_sum.sort_values(by='PA_PROC_ID')
 
