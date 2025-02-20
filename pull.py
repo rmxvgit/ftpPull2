@@ -183,7 +183,7 @@ def dowload_e_processamento(file: str, cnes: str):
         print("Conversão para csv...")
         dbf_to_csv(f"./dbfs/{fileName[:-4]}.dbf", f"./csvs/{fileName[:-4]}.csv")
         print("Processando dados do csv por cnes...")
-        os.system(f"python3 processar_dados.py ./csvs/{fileName[:-4]}.csv {cnes}")
+        os.system(f"python3 processar_dados.py ./csvs/{fileName[:-4]}.csv {cnes} ./finalcsvs/{fileName[:-4]}.csv")
 
 
 class processo_processamento(multiprocessing.Process):
