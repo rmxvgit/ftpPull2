@@ -7,6 +7,7 @@ from fpdf.text_region import XPos, YPos
 import pandas as pd
 import sys
 import os
+import fitz
 import multiprocessing
 
 from pandas.io.parsers.readers import read_csv
@@ -83,6 +84,16 @@ def find_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: d
     ftp_client.quit()
     return files
 
+def check_pdf_integrity(path):
+    if not os.path.exists(path):
+        return False
+    try:
+        with fitz.open(path) as doc:
+            return doc.page_count > 0
+    except Exception as error:
+        print(f"Erro ao verificar PDF {path}: {error}")
+        return False
+
 def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sia_sih: str, cnes: str):
     files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
     print("Arquivos a serem baixados:")
@@ -107,6 +118,10 @@ def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dic
         process = processo_processamento(index, file)
         process.start()
         lista_de_processos.append(process)
+
+        download_path = f"./downloads/{file}"
+        if not check_pdf_integrity(download_path):
+            print(f"Erro: {file} pode estar corrompido ou incompleto")
 
     for process in lista_de_processos:
         process.join()
