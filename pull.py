@@ -87,7 +87,7 @@ def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dic
     print("Arquivos a serem baixados:")
     print(files_of_interest)
 
-    try:
+    try: #TODO separar os try's and catches
         os.makedirs("downloads")
         os.makedirs("dbfs")
         os.makedirs("csvs")

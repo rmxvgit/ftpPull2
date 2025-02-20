@@ -2,7 +2,10 @@ import pandas as pd
 import numpy as np
 import sys
 
-def processar_dados_csv(csv_file_path: str):
+# definição de padrão da chamada do script processar dados
+# python3 processar_dados.py <sourceFile> <CNES> <destinationFIle>
+
+def processar_dados_csv(csv_file_path: str, output_file_path: str, cnes: int):
     """Função que processa o arquivo CSV gerado."""
     # Carregando os dados
     df_main = pd.read_csv(csv_file_path, encoding='latin1', low_memory=False)
@@ -11,7 +14,7 @@ def processar_dados_csv(csv_file_path: str):
 
 
     # Filtrando por CNES
-    df_cnes = df_main[df_main['PA_CODUNI'] == 2248328]  # Puxar CNES de algum local
+    df_cnes = df_main[df_main['PA_CODUNI'] == cnes]  # Puxar CNES de algum local
     df_filt = df_cnes[['PA_CODUNI', 'PA_CMP', 'PA_PROC_ID', 'PA_QTDAPR', 'PA_VALPRO']]
 
     print("DF cnes")
@@ -52,8 +55,16 @@ def processar_dados_csv(csv_file_path: str):
     print(f"Resultado salvo em: {output_csv_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print("Uso: python processar_dados.py <caminho_do_csv>")
-    else:
-        csv_file_path = sys.argv[1]
-        processar_dados_csv(csv_file_path)
+        exit(1)
+
+    csv_file_path = sys.argv[1]
+    output_file_path = sys.argv[3]
+    try:
+        cnes = int(sys.argv[2])
+    except:
+        print(f"cnes inserido é invalido: {sys.argv[2]}")
+        exit(1)
+
+    processar_dados_csv(csv_file_path, output_file_path, cnes)
