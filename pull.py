@@ -104,7 +104,7 @@ def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dic
 
     lista_de_processos = []
     for index, file in enumerate(files_of_interest):
-        process = processo_processamento(index, file)
+        process = processo_processamento(index, file, cnes)
         process.start()
         lista_de_processos.append(process)
 
@@ -170,7 +170,7 @@ def create_pdf_from_csv(source_file_path: str, output_file_path: str):
 
     pdf.output(output_file_path)
 
-def dowload_e_processamento(file: str):
+def dowload_e_processamento(file: str, cnes: str):
         fileName = os.path.split(file)[1]
         if not file_was_already_dowloaded(fileName):
             print(f"Dowload de {file}...")
@@ -187,12 +187,13 @@ def dowload_e_processamento(file: str):
 
 
 class processo_processamento(multiprocessing.Process):
-    def __init__(self, id: int, file: str):
+    def __init__(self, id: int, file: str, cnes: str):
         super(processo_processamento, self).__init__()
         self.id = id
         self.file = file
+        self.cnes = cnes
 
     def run(self):
-        dowload_e_processamento(self.file)
+        dowload_e_processamento(self.file, self.cnes)
 
 main()
