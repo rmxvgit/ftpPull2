@@ -1,16 +1,15 @@
 import ftplib as ftp
-from typing import Text
-from fpdf import FPDF
 import csv
 from dbfread import DBF
-from fpdf.text_region import XPos, YPos
 import pandas as pd
 import sys
 import os
 import multiprocessing
+from fpdf import FPDF
 
 from pandas.io.parsers.readers import read_csv
 
+# python3 pull.py SIA RS 01-24 01-24 2248328
 #TODO: criar forma de conferir se os arquivos foram baixados na íntegra
 
 searchDirs = {
@@ -111,6 +110,18 @@ def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dic
     for process in lista_de_processos:
         process.join()
 
+    unite_files()
+
+def unite_files():
+    print("unindo arquivos .csv")
+    laudo_files = os.listdir("finalcsvs")
+    composite_file = os.open("finalcsvs/resultado_final.csv", os.O_CREAT | os.O_WRONLY)
+    for laudo_file in laudo_files:
+        simple_file = os.open(f"finalcsvs/{laudo_file}", os.O_RDONLY)
+        os.write(composite_file, os.read(simple_file, os.fstat(simple_file).st_size))
+        os.close(simple_file)
+    os.close(composite_file)
+
 def file_was_already_dowloaded(file_name: str) -> bool:
     return os.path.exists(f"./downloads/{file_name}")
 
@@ -154,18 +165,19 @@ def dbf_to_csv(dbf_table_pth: str, csv_output_path: str):#Input a dbf, output a 
             writer.writerow(list(record.values()))
 
 def create_pdf_from_csv(source_file_path: str, output_file_path: str):
-    csv = pd.read_csv(source_file_path)
+    csv = pd.read_csv(source_file_path, encoding='latin-1')
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font('helvetica', size=12)
-    pdf.cell(200, 10, text="Laudo Do AvogaSUS", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
     pdf.set_font('helvetica', size=8)
+    pdf.cell(200, 10, txt="Laudo Do AvogaSUS", align='C')
+    pdf.ln()
+    pdf.set_font('helvetica', size=4)
     for collumn in list(csv.columns):
-        pdf.cell(18, 10, text=str(collumn), border=1)
+        pdf.cell(24, 10, txt=str(collumn)[:20], border=1)
     pdf.ln()
     for index, row in csv.iterrows():
         for item in row:
-            pdf.cell(18, 10, text=str(item), border=1)
+            pdf.cell(24, 10, txt=str(item)[:20], border=1)
         pdf.ln()
 
     pdf.output(output_file_path)
@@ -196,4 +208,5 @@ class processo_processamento(multiprocessing.Process):
     def run(self):
         dowload_e_processamento(self.file, self.cnes)
 
-main()
+create_pdf_from_csv("./finalcsvs/resultado_final.csv", "./finalcsvs/resultado_final.pdf")
+#main()
