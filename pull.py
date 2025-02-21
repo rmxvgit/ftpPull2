@@ -111,6 +111,8 @@ def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dic
         process.join()
 
     unite_files()
+    print("gerando pdf")
+    create_pdf_from_csv("./finalcsvs/resultado_final.csv", "./finalcsvs/resultado_final.pdf")
 
 def unite_files():
     print("unindo arquivos .csv")
@@ -208,5 +210,4 @@ class processo_processamento(multiprocessing.Process):
     def run(self):
         dowload_e_processamento(self.file, self.cnes)
 
-create_pdf_from_csv("./finalcsvs/resultado_final.csv", "./finalcsvs/resultado_final.pdf")
-#main()
+main()
