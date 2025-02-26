@@ -4,13 +4,11 @@ from dbfread import DBF
 import pandas as pd
 import sys
 import os
-import multiprocessing
+from multiprocessing import Pool
 from fpdf import FPDF
 
-from pandas.io.parsers.readers import read_csv
-
 # python3 pull.py SIA RS 01-24 01-24 2248328
-#TODO: criar forma de conferir se os arquivos foram baixados na íntegra
+# TODO: criar forma de conferir se os arquivos foram baixados na íntegra
 
 searchDirs = {
     'SIA': ["/dissemin/publicos/SIASUS/199407_200712/Dados", "/dissemin/publicos/SIASUS/200801_/Dados"],
@@ -33,12 +31,8 @@ def main():
 
     print(args)
 
-    if args[0] == 'SIA':
-        get_and_process_data(args[1], data_inicio, data_fim, 'SIA', args[4])
-    elif args[0] == 'SIH':
-        get_and_process_data(args[1], data_inicio, data_fim, 'SIH', args[4])
-    else:
-        print("Argumento inválido:", args[0])
+    get_and_process_data(args[1], data_inicio, data_fim, args[0], args[4])
+
 
 def validate_args(args: list[str]) -> bool:
     if len(args) != 5:
@@ -57,10 +51,12 @@ def validate_args(args: list[str]) -> bool:
         return False
     return True
 
+
 def is_date_less(date1: dict[str, int], date2: dict[str, int]) -> bool:
     return date1['year'] < date2['year'] or (date1['year'] == date2['year'] and date1['month'] < date2['month'])
 
-def find_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sih_sia: str):
+
+def find_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sih_sia: str) -> list[str]:
     files = []
     search_dirs = searchDirs[sih_sia]
     ftp_client = ftp.FTP("ftp.datasus.gov.br")
@@ -68,51 +64,54 @@ def find_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: d
     for dir in search_dirs:
         print(dir)
         def append_to_file(file: str):
-                file = file.split(' ')[-1]
-                dateString =  file[6:8] + "-" + file[4:6]
-                try: date = to_time(dateString)
-                except: return
+            file = file.split(' ')[-1]
+            dateString =  file[6:8] + "-" + file[4:6]
+            try: date = to_time(dateString)
+            except: return
 
-                if file[0:2] != search_prefix[sih_sia] or estado != file[2:4] or is_date_less(date, data_inicio) or is_date_less(data_fim, date):
-                    return
-                files.append(dir + "/" + file)
+            if file[0:2] != search_prefix[sih_sia] or estado != file[2:4] or is_date_less(date, data_inicio) or is_date_less(data_fim, date):
+                return
+            files.append(dir + "/" + file)
 
         ftp_client.cwd(dir)
         ftp_client.retrlines("LIST", append_to_file)
     ftp_client.quit()
     return files
 
+
 def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sia_sih: str, cnes: str):
     files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
-    print("Arquivos a serem baixados:")
-    print(files_of_interest)
+    print(f"Arquivos a serem baixados:\n{files_of_interest}")
 
-    try: #TODO separar os try's and catches
+    create_storage_folders()
+
+    with Pool(10) as p:
+        p.map(dowload_e_processamento, [[file, cnes] for file in files_of_interest])
+
+    unite_files()
+    exit(0)
+    print("gerando pdf")
+    create_pdf_from_csv("./finalcsvs/resultado_final.csv", "./finalcsvs/resultado_final.pdf")
+
+
+def create_storage_folders() -> None:
+    try:
         os.makedirs("downloads")
-    except: pass
+    except:
+        pass
     try:
         os.makedirs("dbfs")
-    except: pass
+    except:
+        pass
     try:
         os.makedirs("csvs")
-    except: pass
+    except:
+        pass
     try:
         os.makedirs("finalcsvs")
     except:
         pass
 
-    lista_de_processos = []
-    for index, file in enumerate(files_of_interest):
-        process = processo_processamento(index, file, cnes)
-        process.start()
-        lista_de_processos.append(process)
-
-    for process in lista_de_processos:
-        process.join()
-
-    unite_files()
-    print("gerando pdf")
-    create_pdf_from_csv("./finalcsvs/resultado_final.csv", "./finalcsvs/resultado_final.pdf")
 
 def unite_files():
     print("unindo arquivos .csv")
@@ -124,11 +123,14 @@ def unite_files():
         os.close(simple_file)
     os.close(composite_file)
 
+
 def file_was_already_dowloaded(file_name: str) -> bool:
     return os.path.exists(f"./downloads/{file_name}")
 
+
 def file_was_already_converted_to_dbf(file_name: str) -> bool:
     return os.path.exists(f"./dbfs/{file_name}")
+
 
 def to_time(data: str) -> dict[str, int]:
     month_year = [int(x) for x in data.split('-')]
@@ -138,6 +140,7 @@ def to_time(data: str) -> dict[str, int]:
         else:
             month_year[1] += 2000
     return {'month': month_year[0], 'year': month_year[1]}
+
 
 def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
     try:
@@ -158,13 +161,15 @@ def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
         print("Erro ao fazer download", remote_path)
         return
 
-def dbf_to_csv(dbf_table_pth: str, csv_output_path: str):#Input a dbf, output a csv, same name, same path, except extension
+
+def dbf_to_csv(dbf_table_pth: str, csv_output_path: str):  #Input a dbf, output a csv, same name, same path, except extension
     table = DBF(dbf_table_pth)# table variable is a DBF object
-    with open(csv_output_path, 'w', newline = '') as f:# create a csv file, fill it with dbf content
+    with open(csv_output_path, 'w', newline = '') as f:  # create a csv file, fill it with dbf content
         writer = csv.writer(f)
-        writer.writerow(table.field_names)# write the column name
-        for record in table:# write the rows
+        writer.writerow(table.field_names)  # write the column name
+        for record in table:  # write the rows
             writer.writerow(list(record.values()))
+
 
 def create_pdf_from_csv(source_file_path: str, output_file_path: str):
     csv = pd.read_csv(source_file_path, encoding='latin-1')
@@ -184,30 +189,24 @@ def create_pdf_from_csv(source_file_path: str, output_file_path: str):
 
     pdf.output(output_file_path)
 
-def dowload_e_processamento(file: str, cnes: str):
-        fileName = os.path.split(file)[1]
-        if not file_was_already_dowloaded(fileName):
-            print(f"Dowload de {file}...")
-            dowload_from_ftp("ftp.datasus.gov.br", file, f"{os.curdir}/downloads/")
 
-        if not file_was_already_converted_to_dbf(f"{fileName[:-4]}.dbf"):
-            print("Conversão para dbf...")
-            os.system(f"./blast-dbf ./downloads/{fileName} ./dbfs/{fileName[:-4]}.dbf" )
+def dowload_e_processamento(file_and_cnes: list[str]):
+    file = file_and_cnes[0]
+    cnes = file_and_cnes[1]
+    fileName = os.path.split(file)[1]
+    if not file_was_already_dowloaded(fileName):
+        print(f"Dowload de {file}...")
+        dowload_from_ftp("ftp.datasus.gov.br", file, f"{os.curdir}/downloads/")
 
-        print("Conversão para csv...")
-        dbf_to_csv(f"./dbfs/{fileName[:-4]}.dbf", f"./csvs/{fileName[:-4]}.csv")
-        print("Processando dados do csv por cnes...")
-        os.system(f"python3 processar_dados.py ./csvs/{fileName[:-4]}.csv {cnes} ./finalcsvs/{fileName[:-4]}.csv")
+    if not file_was_already_converted_to_dbf(f"{fileName[:-4]}.dbf"):
+        print("Conversão para dbf...")
+        os.system(f"./blast-dbf ./downloads/{fileName} ./dbfs/{fileName[:-4]}.dbf")
 
+    print("Conversão para csv...")
+    os.system(f"./DBF2CSV ./dbfs/{fileName[:-4]}.dbf ./csvs/{fileName[:-4]}.csv")
 
-class processo_processamento(multiprocessing.Process):
-    def __init__(self, id: int, file: str, cnes: str):
-        super(processo_processamento, self).__init__()
-        self.id = id
-        self.file = file
-        self.cnes = cnes
+    print("Processando dados do csv por cnes...")
+    os.system(f"python3 processar_dados.py ./csvs/{fileName[:-4]}.csv {cnes} ./finalcsvs/{fileName[:-4]}.csv")
 
-    def run(self):
-        dowload_e_processamento(self.file, self.cnes)
 
 main()
