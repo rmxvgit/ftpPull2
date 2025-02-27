@@ -91,45 +91,45 @@ def get_and_process_data(estado: str, data_inicio: dict[str, int], data_fim: dic
     unite_files()
     exit(0)
     print("gerando pdf")
-    create_pdf_from_csv("./finalcsvs/resultado_final.csv", "./finalcsvs/resultado_final.pdf")
+    create_pdf_from_csv("../finalcsvs/resultado_final.csv", "../finalcsvs/resultado_final.pdf")
 
 
 def create_storage_folders() -> None:
     try:
-        os.makedirs("downloads")
+        os.makedirs("../downloads")
     except:
         pass
     try:
-        os.makedirs("dbfs")
+        os.makedirs("../dbfs")
     except:
         pass
     try:
-        os.makedirs("csvs")
+        os.makedirs("../csvs")
     except:
         pass
     try:
-        os.makedirs("finalcsvs")
+        os.makedirs("../finalcsvs")
     except:
         pass
 
 
 def unite_files():
     print("unindo arquivos .csv")
-    laudo_files = os.listdir("finalcsvs")
-    composite_file = os.open("finalcsvs/resultado_final.csv", os.O_CREAT | os.O_WRONLY)
+    laudo_files = os.listdir("../finalcsvs")
+    composite_file = os.open("../finalcsvs/resultado_final.csv", os.O_CREAT | os.O_WRONLY)
     for laudo_file in laudo_files:
-        simple_file = os.open(f"finalcsvs/{laudo_file}", os.O_RDONLY)
+        simple_file = os.open(f"../finalcsvs/{laudo_file}", os.O_RDONLY)
         os.write(composite_file, os.read(simple_file, os.fstat(simple_file).st_size))
         os.close(simple_file)
     os.close(composite_file)
 
 
 def file_was_already_dowloaded(file_name: str) -> bool:
-    return os.path.exists(f"./downloads/{file_name}")
+    return os.path.exists(f"../downloads/{file_name}")
 
 
 def file_was_already_converted_to_dbf(file_name: str) -> bool:
-    return os.path.exists(f"./dbfs/{file_name}")
+    return os.path.exists(f"../dbfs/{file_name}")
 
 
 def to_time(data: str) -> dict[str, int]:
@@ -196,17 +196,16 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     fileName = os.path.split(file)[1]
     if not file_was_already_dowloaded(fileName):
         print(f"Dowload de {file}...")
-        dowload_from_ftp("ftp.datasus.gov.br", file, f"{os.curdir}/downloads/")
+        dowload_from_ftp("ftp.datasus.gov.br", file, "../downloads/")
 
     if not file_was_already_converted_to_dbf(f"{fileName[:-4]}.dbf"):
         print("Conversão para dbf...")
-        os.system(f"./blast-dbf ./downloads/{fileName} ./dbfs/{fileName[:-4]}.dbf")
+        os.system(f"../exes/blast-dbf ../downloads/{fileName} ../dbfs/{fileName[:-4]}.dbf")
 
     print("Conversão para csv...")
-    os.system(f"./DBF2CSV ./dbfs/{fileName[:-4]}.dbf ./csvs/{fileName[:-4]}.csv")
-
+    os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv")
     print("Processando dados do csv por cnes...")
-    os.system(f"python3 processar_dados.py ./csvs/{fileName[:-4]}.csv {cnes} ./finalcsvs/{fileName[:-4]}.csv")
+    os.system(f"python3 processar_dados.py ../csvs/{fileName[:-4]}.csv {cnes} ../finalcsvs/{fileName[:-4]}.csv")
 
 
 main()

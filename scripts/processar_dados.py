@@ -9,8 +9,8 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, cnes: int):
     """Função que processa o arquivo CSV gerado."""
     # Carregando os dados
     df_main = pd.read_csv(csv_file_path, encoding='latin1', low_memory=False)
-    df_proc = pd.read_csv("dadosprocedimentos.csv")
-    df_tunep = pd.read_csv("tabela_tunep_mais_origem.csv", encoding='latin1')
+    df_proc = pd.read_csv("../dados/dadosprocedimentos.csv")
+    df_tunep = pd.read_csv("../dados/tabela_tunep_mais_origem.csv", encoding='latin1')
 
 
     # Filtrando por CNES
