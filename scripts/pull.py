@@ -203,7 +203,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         os.system(f"../exes/blast-dbf ../downloads/{fileName} ../dbfs/{fileName[:-4]}.dbf")
 
     print("Conversão para csv...")
-    os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv")
+    os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes}")
     print("Processando dados do csv por cnes...")
     os.system(f"python3 processar_dados.py ../csvs/{fileName[:-4]}.csv {cnes} ../finalcsvs/{fileName[:-4]}.csv")
 
