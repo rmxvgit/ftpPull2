@@ -138,7 +138,7 @@ def get_current_data() -> dict[str, int]:
 def main():
     if len(sys.argv) != 4:
         #TODO: escrever o uso correto do programa
-        print("Uso: python processar_dados.py <caminho_do_csv>")
+        print("Uso: python processar_dados.py <caminho_do_csv> <caminho_do_output> <data_inicio>")
         exit(1)
 
     csv_file_path = sys.argv[1]
@@ -149,5 +149,4 @@ def main():
     
     processar_dados_csv(csv_file_path, output_file_path, data_inicio, data_fim)
 
-correcao_absoluta({'year': 2001, 'month': 1}, {'year':2001, 'month': 2}, CarregaSelic())
-#main()
+main()
