@@ -17,7 +17,7 @@ def get_day():
 
     return f"{day_str}/{mes_str}/{date.tm_year}"
 
-def CarregaSelic() -> str[float]:
+def CarregaSelic() -> list[float]:
     today_str = get_day()
     url_bcb = f" https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=csv&dataInicial=01/01/2021&dataFinal={today_str}"
     selic = pd.read_csv(url_bcb, sep=";")

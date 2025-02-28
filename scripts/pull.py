@@ -205,7 +205,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     print("Conversão para csv...")
     os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes}")
     print("Processando dados do csv por cnes...")
-    os.system(f"python3 processar_dados.py ../csvs/{fileName[:-4]}.csv ../finalcsvs/{fileName[:-4]}.csv {sys.argv[2]} {sys.argv[3]}")
+    os.system(f"python3 processar_dados.py ../csvs/{fileName[:-4]}.csv ../finalcsvs/{fileName[:-4]}.csv {sys.argv[3]}")
 
 
 main()
