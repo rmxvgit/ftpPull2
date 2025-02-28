@@ -1,3 +1,4 @@
+import time as t
 
 class Tdata():
     def __init__(self, mes: int, ano: int):
@@ -34,3 +35,7 @@ class Tdata():
     
     def __gt__(self, other):
         return not self.__lt__(other)
+    
+    def current_data():
+        now = t.localtime()
+        return Tdata(now.tm_mon, now.tm_year)

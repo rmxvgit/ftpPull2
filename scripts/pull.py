@@ -1,12 +1,11 @@
 import ftplib as ftp
-import csv
-from dbfread import DBF
 import pandas as pd
 import sys
 import os
 from multiprocessing import Pool
 from fpdf import FPDF
 from tempo import Tdata
+import processar_dados
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
 # TODO: criar forma de conferir se os arquivos foram baixados na íntegra
@@ -37,7 +36,7 @@ def main():
 
 def validate_args(args: list[str]) -> bool:
     if len(args) != 5:
-        print("Número de argumentos inválido")
+        print("Número de argumentos fornecidos é inválido")
         return False
     if args[0] not in ['SIA', 'SIH']:
         print("Argumento inválido:", args[0])
@@ -52,11 +51,12 @@ def validate_args(args: list[str]) -> bool:
         return False
     return True
 
-def find_files_of_interest(estado: str, data_inicio: dict[str, int], data_fim: dict[str, int], sih_sia: str) -> list[str]:
+def find_files_of_interest(estado: str, data_inicio: Tdata, data_fim: Tdata, sih_sia: str) -> list[str]:
     files = []
     search_dirs = searchDirs[sih_sia]
     ftp_client = ftp.FTP("ftp.datasus.gov.br")
     ftp_client.login()
+    
     for dir in search_dirs:
         print(f"{dir} <---- vasculhando diretório")
         def append_to_file(file: str):
@@ -84,9 +84,11 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
         p.map(dowload_e_processamento, [[file, cnes] for file in files_of_interest])
 
     unite_files()
-    exit(0)
-    print("gerando pdf")
-    create_pdf_from_csv("../finalcsvs/resultado_final.csv", "../finalcsvs/resultado_final.pdf")
+
+    #TODO: remover os arquivos baixados
+    
+    #print("gerando pdf")
+    #create_pdf_from_csv("../finalcsvs/resultado_final.csv", "../finalcsvs/resultado_final.pdf")
 
 
 def create_storage_folders() -> None:
@@ -121,10 +123,6 @@ def unite_files():
 
 def file_was_already_dowloaded(file_name: str) -> bool:
     return os.path.exists(f"../downloads/{file_name}")
-
-
-def file_was_already_converted_to_dbf(file_name: str) -> bool:
-    return os.path.exists(f"../dbfs/{file_name}")
 
 
 def dowload_from_ftp(ftp_server: str, remote_path: str, local_dir: str):
@@ -170,20 +168,19 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     file = file_and_cnes[0]
     cnes = file_and_cnes[1]
     fileName = os.path.split(file)[1]
-    start_time = f"{fileName[4:6]}-{fileName[6:8]}"
+    start_time = Tdata.str_to_data(f"{fileName[6:8]}-{fileName[4:6]}")
     if not file_was_already_dowloaded(fileName):
         print(f"Dowload de {file}...")
         dowload_from_ftp("ftp.datasus.gov.br", file, "../downloads/")
 
-    if not file_was_already_converted_to_dbf(f"{fileName[:-4]}.dbf"):
-        print("Conversão para dbf...")
-        os.system(f"../exes/blast-dbf ../downloads/{fileName} ../dbfs/{fileName[:-4]}.dbf")
+    print("Conversão para dbf...")
+    os.system(f"../exes/blast-dbf ../downloads/{fileName} ../dbfs/{fileName[:-4]}.dbf")
 
     print("Conversão para csv...")
     os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes}")
+
     print("Processando dados do csv por cnes...")
-    print(f"python3 processar_dados.py ../csvs/{fileName[:-4]}.csv ../finalcsvs/{fileName[:-4]}.csv {start_time}")
-    os.system(f"python3 processar_dados.py ../csvs/{fileName[:-4]}.csv ../finalcsvs/{fileName[:-4]}.csv {start_time}")
+    processar_dados.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
 
 
 main()
