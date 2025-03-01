@@ -1,8 +1,9 @@
-import pandas as pd
-import numpy as np
-import sys
 import math as m
+import sys
 import time as t
+
+import numpy as np
+import pandas as pd
 
 # definição de padrão da chamada do script processar dados
 # python3 processar_dados.py <sourceFile> <CNES> <destinationFIle>
@@ -83,7 +84,7 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
 
     porcentagem_de_correcao = (taxa_de_correcao_para_esse_mes - 1)*100
 
-    df_main = pd.read_csv(csv_file_path, encoding='latin1', low_memory=False)
+    df_main = pd.read_csv(csv_file_path, encoding='utf-8-sig', low_memory=False)
     df_proc = pd.read_csv("../dados/dadosprocedimentos.csv")
     df_tunep = pd.read_csv("../dados/tabela_tunep_mais_origem.csv", encoding='latin1')
 
@@ -108,16 +109,28 @@ def processar_dados_csv(csv_file_path: str, output_file_path: str, data_inicio: 
 
     df_desc['ValorTUNEP'] = pd.to_numeric(df_desc['ValorTUNEP'].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
     comp_valor = df_desc['PA_QTDAPR'] * df_desc['ValorTUNEP']
-    df_desc['IVR/Tunep (R$)'] = np.where(comp_valor > df_desc['IVR'], comp_valor, df_desc['IVR'])
-    df_desc['correcao'] = df_desc['IVR/Tunep (R$)'] * (taxa_de_correcao_para_esse_mes -1)
-    df_desc['total'] = df_desc['IVR/Tunep (R$)'] * taxa_de_correcao_para_esse_mes
+    df_desc['IVR/Tunep'] = np.where(comp_valor > df_desc['IVR'], comp_valor, df_desc['IVR'])
+    df_desc['correcao'] = df_desc['IVR/Tunep'] * (taxa_de_correcao_para_esse_mes -1)
+    df_desc['Total'] = df_desc['IVR/Tunep'] * taxa_de_correcao_para_esse_mes
+    
+    #reorganizando e formatanto colunas
+    df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].astype(str).str.zfill(10)
+    df_desc['CO_PROCEDIMENTO'] = df_desc['CO_PROCEDIMENTO'].str[:2] + "." + df_desc['CO_PROCEDIMENTO'].str[2:4] + "." + df_desc['CO_PROCEDIMENTO'].str[4:6] + "." + df_desc['CO_PROCEDIMENTO'].str[6:9] + "-" + df_desc['CO_PROCEDIMENTO'].str[9]
 
+    df_desc['PA_CMP'] = df_desc['PA_CMP'].astype(str).str[4:] + '/' + df_desc['PA_CMP'].astype(str).str[:4]
+    
+    df_desc['PA_VALPRO'] = df_desc['PA_VALPRO'].map(lambda x: f"{x:,.2f}".replace('.', ','))
+    df_desc['IVR/Tunep'] = df_desc['IVR/Tunep'].map(lambda x: f"{x:,.2f}".replace('.', ','))
+    df_desc['correcao'] = df_desc['correcao'].map(lambda x: f"{x:,.2f}".replace('.', ','))
+    df_desc['Total'] = df_desc['Total'].map(lambda x: f"{x:,.2f}".replace('.', ','))
+      
+    df_desc['Base SUS'] = 'SIASUS'
 
-    df_final = df_desc[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALPRO', 'PA_QTDAPR', 'IVR/Tunep (R$)', 'correcao', 'total']].rename(
-        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'PA_CMP': ' Mês/Ano', 'PA_VALPRO': 'Valor Base (unitário) (R$)', 'PA_QTDAPR': ' Qtd. Base', 'IVR/Tunep (R$)': 'IVR/Tunep (R$)'})
+    df_final = df_desc[['CO_PROCEDIMENTO', 'NO_PROCEDIMENTO', 'PA_CMP', 'PA_VALPRO', 'PA_QTDAPR', 'IVR/Tunep', 'correcao', 'Total', 'Base SUS']].rename(
+        columns = {'CO_PROCEDIMENTO': 'Procedimentos', 'NO_PROCEDIMENTO': 'Desc. Procedimento', 'PA_CMP': ' Mês/Ano', 'PA_VALPRO': 'Valor Base (unitário) (R$)', 'PA_QTDAPR': ' Qtd. Base', 'IVR/Tunep': 'IVR/Tunep (R$)', 'correcao' :'Correção'})
     print(df_final)
 
-    df_final.to_csv(f"{output_file_path}", index=False, encoding='latin1')
+    df_final.to_csv(f"{output_file_path}", sep=';', index=False,  encoding='utf-8-sig')
     print(f"Resultado salvo em: {output_file_path}")
 
 def to_time(data: str) -> dict[str, int]:
@@ -149,5 +162,5 @@ def main():
     
     processar_dados_csv(csv_file_path, output_file_path, data_inicio, data_fim)
 
-correcao_absoluta({'year': 2001, 'month': 1}, {'year':2001, 'month': 2}, CarregaSelic())
-#main()
+# correcao_absoluta({'year': 2001, 'month': 1}, {'year':2001, 'month': 2}, CarregaSelic())
+main()
