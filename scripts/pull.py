@@ -9,7 +9,8 @@ import pandas as pd
 from dbfread import DBF
 from fpdf import FPDF
 from tempo import Tdata
-import processar_dados
+import processar_dados_sia
+import processar_dados_sih
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
 # TODO: criar forma de conferir se os arquivos foram baixados na íntegra
@@ -87,6 +88,7 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     with Pool(10) as p:
         p.map(dowload_e_processamento, [[file, cnes] for file in files_of_interest])
 
+    sys.exit()
     unite_files()
 
     #TODO: remover os arquivos baixados
@@ -177,6 +179,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         print(f"Dowload de {file}...")
         dowload_from_ftp("ftp.datasus.gov.br", file, "../downloads/")
 
+    """
     print("Conversão para dbf...")
     os.system(f"../exes/blast-dbf ../downloads/{fileName} ../dbfs/{fileName[:-4]}.dbf")
 
@@ -185,6 +188,8 @@ def dowload_e_processamento(file_and_cnes: list[str]):
 
     print("Processando dados do csv por cnes...")
     processar_dados.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
+
+    """
 
 
 main()

@@ -156,5 +156,3 @@ def main():
     data_fim = get_current_data() #TODO: passar dados por parâmetro assim como para data_início
     
     processar_dados_csv(csv_file_path, output_file_path, data_inicio, data_fim)
-
-main()

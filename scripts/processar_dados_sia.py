@@ -163,4 +163,3 @@ def main():
     processar_dados_csv(csv_file_path, output_file_path, data_inicio, data_fim)
 
 # correcao_absoluta({'year': 2001, 'month': 1}, {'year':2001, 'month': 2}, CarregaSelic())
-main()
