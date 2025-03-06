@@ -56,7 +56,7 @@ def find_files_of_interest(estado: str, data_inicio: Tdata, data_fim: Tdata, sih
     search_dirs = searchDirs[sih_sia]
     ftp_client = ftp.FTP("ftp.datasus.gov.br")
     ftp_client.login()
-    
+
     for dir in search_dirs:
         print(f"{dir} <---- vasculhando diretório")
         def append_to_file(file: str):
@@ -86,7 +86,7 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     unite_files()
 
     #TODO: remover os arquivos baixados
-    
+
     #print("gerando pdf")
     #create_pdf_from_csv("../finalcsvs/resultado_final.csv", "../finalcsvs/resultado_final.pdf")
 
