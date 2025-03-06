@@ -179,17 +179,17 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         print(f"Dowload de {file}...")
         dowload_from_ftp("ftp.datasus.gov.br", file, "../downloads/")
 
-    """
     print("Conversão para dbf...")
     os.system(f"../exes/blast-dbf ../downloads/{fileName} ../dbfs/{fileName[:-4]}.dbf")
 
     print("Conversão para csv...")
-    os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes}")
+    os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes} {sys.argv[1]}")
 
     print("Processando dados do csv por cnes...")
-    processar_dados.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
-
-    """
+    if (sys.argv[1] == "SIA"):
+        processar_dados_sia.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
+    else:
+        processar_dados_sih.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
 
 
 main()
