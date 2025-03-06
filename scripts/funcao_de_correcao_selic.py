@@ -15,12 +15,13 @@ def get_day():
     else:
         day_str = f"0{date.tm_mon}"
 
-    return f"{day_str}/{mes_str}/{date.tm_year}"
+    return f"{day_str}-{mes_str}-{date.tm_year}"
 
 def CarregaSelic() -> list[float]:
     today_str = get_day()
-    url_bcb = f" https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=csv&dataInicial=01/01/2021&dataFinal={today_str}"
+    url_bcb = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=csv&dataInicial=01/01/2023&dataFinal=01/01/2024"
     selic = pd.read_csv(url_bcb, sep=";")
+    print("selic")
     selic['valor'] = selic['valor'].str.replace(",", ".").astype(float)
     selic['valor'] = (selic['valor']/100) + 1
     return selic['valor'].__array__()
