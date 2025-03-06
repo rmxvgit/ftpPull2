@@ -6,7 +6,6 @@ import sys
 from multiprocessing import Pool
 
 import pandas as pd
-from dbfread import DBF
 from fpdf import FPDF
 from tempo import Tdata
 import processar_dados_sia
@@ -88,13 +87,10 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
     with Pool(10) as p:
         p.map(dowload_e_processamento, [[file, cnes] for file in files_of_interest])
 
-    sys.exit()
     unite_files()
 
     #TODO: remover os arquivos baixados
 
-    #print("gerando pdf")
-    #create_pdf_from_csv("../finalcsvs/resultado_final.csv", "../finalcsvs/resultado_final.pdf")
 
 
 def create_storage_folders() -> None:
@@ -191,5 +187,5 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     else:
         processar_dados_sih.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
 
-
 main()
+
