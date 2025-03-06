@@ -1,10 +1,11 @@
-import ftplib as ftp
 import csv
-from dbfread import DBF
-import pandas as pd
-import sys
+import ftplib as ftp
 import os
+import sys
 from multiprocessing import Pool
+
+import pandas as pd
+from dbfread import DBF
 from fpdf import FPDF
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
@@ -17,7 +18,7 @@ searchDirs = {
 
 search_prefix = {
     'SIA': 'PA',
-    'SIH': 'RD'
+    'SIH': 'SP'
 }
 
 # padrão de chamada do programa:
@@ -204,8 +205,11 @@ def dowload_e_processamento(file_and_cnes: list[str]):
 
     print("Conversão para csv...")
     os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes}")
-    print("Processando dados do csv por cnes...")
-    os.system(f"python3 processar_dados.py ../csvs/{fileName[:-4]}.csv ../finalcsvs/{fileName[:-4]}.csv {sys.argv[3]}")
+    print("Processando dados SIA do csv por cnes...")
+    os.system(f"python3 processar_dados_sia.py ../csvs/{fileName[:-4]}.csv ../finalcsvs/{fileName[:-4]}.csv {sys.argv[3]}")
+    print("Processando dados SIH do csv por cnes...")
+    os.system(f"python3 processar_dados_sih.py ../csvs/{fileName[:-4]}.csv ../finalcsvs/{fileName[:-4]}.csv {sys.argv[3]}")
+    
 
 
 main()
