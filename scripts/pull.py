@@ -6,10 +6,10 @@ import sys
 from multiprocessing import Pool
 
 import pandas as pd
-from dbfread import DBF
 from fpdf import FPDF
 from tempo import Tdata
-import processar_dados
+import processar_dados_sia
+import processar_dados_sih
 
 # python3 pull.py SIA RS 01-24 01-24 2248328
 # TODO: criar forma de conferir se os arquivos foram baixados na íntegra
@@ -91,8 +91,6 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
 
     #TODO: remover os arquivos baixados
 
-    #print("gerando pdf")
-    #create_pdf_from_csv("../finalcsvs/resultado_final.csv", "../finalcsvs/resultado_final.pdf")
 
 
 def create_storage_folders() -> None:
@@ -181,10 +179,13 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     os.system(f"../exes/blast-dbf ../downloads/{fileName} ../dbfs/{fileName[:-4]}.dbf")
 
     print("Conversão para csv...")
-    os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes}")
+    os.system(f"../exes/DBF2CSV ../dbfs/{fileName[:-4]}.dbf ../csvs/{fileName[:-4]}.csv {cnes} {sys.argv[1]}")
 
     print("Processando dados do csv por cnes...")
-    processar_dados.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
-
+    if (sys.argv[1] == "SIA"):
+        processar_dados_sia.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
+    else:
+        processar_dados_sih.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
 
 main()
+
