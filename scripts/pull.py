@@ -28,6 +28,9 @@ search_prefix = {
 # python pull.py <SIA/SIH> <estado> <data-inicio> <data-fim> <CNES>
 
 def main():
+    python_file = sys.argv[0]
+    python_file_dir = os.path.dirname(python_file)
+    print(python_file_dir)
     args = sys.argv[1:]
     if not validate_args(args): return
     print(args)
