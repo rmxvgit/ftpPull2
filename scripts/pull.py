@@ -28,14 +28,15 @@ search_prefix = {
 # python pull.py <SIA/SIH> <estado> <data-inicio> <data-fim> <CNES>
 
 def main():
-    python_file = sys.argv[0]
+    python_file = sys.argv[0] # roda o arquivo do lugar certo
     python_file_dir = os.path.dirname(python_file)
-    print(python_file_dir)
+    os.chdir(python_file_dir)
+
     args = sys.argv[1:]
     if not validate_args(args): return
     print(args)
 
-    sistema = args[0] 
+    sistema = args[0]
     estado = args[1]
     data_inicio = Tdata.str_to_data(args[2])
     data_fim = Tdata.str_to_data(args[3])
@@ -52,18 +53,18 @@ def verify_existence_of_dbf2csv_converter():
     if os.path.exists("../exes/DBF2CSV"):
         return
     else:
-        # TODO: 
+        # TODO:
         pass
-    
+
 
 # verifica a existência do conversor e, caso ele não exista, compila o conversor
 def verify_existence_of_dbc2dbf_converter():
     if os.path.exists("../exes/DBF2CSV"):
         return
     else:
-        # TODO: 
+        # TODO:
         pass
- 
+
 
 def validate_args(args: list[str]) -> bool:
     if len(args) != 5:
@@ -75,13 +76,13 @@ def validate_args(args: list[str]) -> bool:
 
     #essa condição não impede a execução
     if len(args[4]) != 7:
-        print(f"WARNING: É possível que o cnes {args[4]} seja inválido") 
+        print(f"WARNING: É possível que o cnes {args[4]} seja inválido")
 
     try:
         data_inicio = Tdata.str_to_data(args[2])
-    except: 
+    except:
         print(f"data de início em um formato inválido: {args[2]}")
-    
+
     try:
         data_fim = Tdata.str_to_data(args[3])
     except:
@@ -90,7 +91,7 @@ def validate_args(args: list[str]) -> bool:
     if data_fim < data_inicio:
         print("Data de início maior que data de fim")
         return False
- 
+
     return True
 
 def find_files_of_interest(estado: str, data_inicio: Tdata, data_fim: Tdata, sih_sia: str) -> list[str]:
@@ -124,7 +125,7 @@ def get_and_process_data(estado: str, data_inicio: Tdata, data_fim: Tdata, sia_s
         get_and_process_data(estado, data_inicio, data_fim, 'SIA', cnes)
         get_and_process_data(estado, data_inicio, data_fim, 'SIH', cnes)
         return
-    
+
     print(f"processando {sia_sih}:")
 
     files_of_interest = find_files_of_interest(estado, data_inicio, data_fim, sia_sih)
@@ -223,7 +224,7 @@ def dowload_e_processamento(file_and_cnes: list[str]):
     except:
         print(f"a data do arquivo {file} parece não estar em conformidade com o padrão esperado")
         return
-    
+
     if not file_was_already_dowloaded(fileName):
         print(f"Dowload de {file}...")
         dowload_from_ftp("ftp.datasus.gov.br", file, "../downloads/")
@@ -241,4 +242,3 @@ def dowload_e_processamento(file_and_cnes: list[str]):
         processar_dados_sih.processar_dados_csv(f"../csvs/{fileName[:-4]}.csv", f"../finalcsvs/{fileName[:-4]}.csv", start_time, Tdata.current_data())
 
 main()
-
